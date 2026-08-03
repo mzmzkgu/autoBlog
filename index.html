@@ -408,7 +408,8 @@ async function callGemini(apiKey, destination){
 - AI가 쓴 티 나는 상투적 표현 절대 금지 (예: "환상적인", "잊지 못할", "매력적인", "~을 만끽할 수 있었다", "힐링이 되는 시간이었다" 같은 클리셰)
 - 문장 길이를 다양하게: 긴 설명 문장 다음에 짧은 감탄/구어체 문장을 섞기. "~했다" 단조로운 문어체만 쓰지 말고 "~더라고", "~했어요", "~인 듯", "진짜 대박", "완전 럭키" 같은 실제 사람 말투를 자연스럽게 섞기 (과하지 않게, 문단당 1~2번 정도)
 - 구체적 디테일 위주 (가격대, 소요시간, 줄 길이, 냄새, 맛 표현 등 실제 경험한 사람만 알 수 있는 디테일)
-- 각 단계(본문1~3) 마지막 부분에는 반드시 "여기서 이건 꼭 하고 와야 되는" 뉘앙스의 실전 팁 한 문단을 자연스럽게 녹여서 넣기 (꼭 해야 할 액티비티/음식/포토스팟 등 구체적으로 1개 콕 집어서)
+- 절대 하나의 긴 줄글 덩어리로 쓰지 마. 문장 2~4개마다 반드시 줄바꿈(\\n\\n)으로 문단을 끊어서, 인스타/블로그처럼 스크롤하며 가볍게 읽히게 써줘
+- 각 단계(본문1~3)의 마지막 세그먼트(5번째) 끝부분에는 반드시 "여기서 이건 꼭 하고 와야 되는" 뉘앙스의 실전 팁을 자연스럽게 녹여서 넣기 (꼭 해야 할 액티비티/음식/포토스팟 등 구체적으로 1개 콕 집어서)
 
 [제목]
 - "여행지 :: 감성적인 소제목" 형식으로 작성. 예시 형식: "다낭 :: 여유와 바다를 만끽할 수 있던 나만의 여름 휴가지" (이 예시 문구 그대로 쓰지 말고 이 톤/형식만 참고해서 "${destination}"에 맞게 새로 창작)
@@ -420,10 +421,12 @@ async function callGemini(apiKey, destination){
 [여행경로 요약]
 - 전체 일정을 2~4개 구간으로 나눠서 "N~N일차 - 핵심 내용" 형태로 요약 (아래 본문 3단계 내용과 자연스럽게 이어지게)
 
-[본문 구성]
+[본문 구성 — 중요]
 - 총 3단계(도입/이동+첫날 체험, 관광지·맛집 등 중간 여정, 마무리+팁)로 구성
-- 각 단계는 반드시 한글 기준 1200~1500자 (공백 포함)
-- 각 단계마다 그 단계 내용을 대표할 사진을 찾기 위한 영어 이미지 검색어(imageQuery)를 2~4단어로 제공 (Pexels 검색용, 예: "danang beach sunset")
+- 각 단계는 반드시 5개의 짧은 세그먼트(segment)로 쪼개서 작성. "사진 - 짧은글 - 사진 - 짧은글 ..." 형태로 나올 거라서, 세그먼트 하나가 사진 한 장과 짝을 이루는 독립적인 소단락이어야 해
+- 세그먼트 하나는 220~300자 내외 (5개 합산 시 단계당 총 1200~1500자). 세그먼트 내부에도 문장 2~3개마다 줄바꿈을 넣어서 짧게짧게 끊어줘
+- 세그먼트 5개가 이어졌을 때 하나의 자연스러운 흐름(시간순 또는 장소 이동순)이 되게 구성
+- 각 세그먼트마다 그 내용을 대표하는 사진을 찾기 위한 영어 이미지 검색어(imageQuery)를 2~4단어로 제공 (Pexels 검색용, 예: "danang beach sunset")
 
 [해시태그]
 - 전체 글 내용에 맞는 한국어 해시태그 10~18개 생성 (# 없이 단어만, 여행지명/음식/명소/감성 키워드 골고루)
@@ -440,17 +443,24 @@ async function callGemini(apiKey, destination){
     {"days": "3~4일차", "label": "핵심 내용 요약"}
   ],
   "stages": [
-    {"title": "단계 제목", "text": "본문 내용", "imageQuery": "english search keywords"},
-    {"title": "단계 제목", "text": "본문 내용", "imageQuery": "english search keywords"},
-    {"title": "단계 제목", "text": "본문 내용", "imageQuery": "english search keywords"}
+    {
+      "title": "단계 제목",
+      "segments": [
+        {"text": "짧은 세그먼트 본문 (줄바꿈 포함)", "imageQuery": "english search keywords"},
+        {"text": "짧은 세그먼트 본문 (줄바꿈 포함)", "imageQuery": "english search keywords"},
+        {"text": "짧은 세그먼트 본문 (줄바꿈 포함)", "imageQuery": "english search keywords"},
+        {"text": "짧은 세그먼트 본문 (줄바꿈 포함)", "imageQuery": "english search keywords"},
+        {"text": "짧은 세그먼트 본문 (줄바꿈 포함, 마지막엔 꼭 해야할 팁 포함)", "imageQuery": "english search keywords"}
+      ]
+    }
   ],
   "hashtags": ["태그1", "태그2", "..."]
 }`;
 
   // 1차: 기본 설정으로 시도. 실패(잘림/파싱오류) 시 사고과정을 끄고 토큰 예산을 더 확보해서 재시도
   const attempts = [
-    { temperature:0.95, maxOutputTokens:16000 },
-    { temperature:0.95, maxOutputTokens:16000, thinkingConfig:{ thinkingBudget:0 } },
+    { temperature:0.95, maxOutputTokens:20000 },
+    { temperature:0.95, maxOutputTokens:20000, thinkingConfig:{ thinkingBudget:0 } },
   ];
 
   let lastErr;
@@ -605,11 +615,25 @@ function renderResults(destination, parsed, images){
     routeCard.querySelector('#copyRouteBtn').addEventListener('click', (e)=> copyText(routeText, e.currentTarget));
   }
 
-  // 4~6. stages (본문 1~3, 사진 포함)
+  // 4~6. stages (본문 1~3, 세그먼트별 사진 5장 + 짧은 글 교차)
   parsed.stages.forEach((stage, i)=>{
-    const img = images[i];
+    const segImages = images[i] || [];
+    const segments = stage.segments || [];
+    const totalChars = segments.reduce((sum, s)=> sum + (s.text||'').length, 0);
     const card = document.createElement('div');
     card.className = 'stage';
+
+    const segmentsHtml = segments.map((seg, si)=>{
+      const img = segImages[si];
+      return `
+        ${img ? `<img class="stage-img" src="${img.url}" alt="${escapeHtml(seg.imageQuery||'')}">` : `<div class="stage-img"></div>`}
+        <div class="img-link-row">
+          <input type="text" readonly value="${img ? img.url : '이미지를 찾지 못했어 (검색어: ' + escapeHtml(seg.imageQuery||'') + ')'}">
+          <button class="copy-btn" data-copy="${img ? img.url.replace(/"/g,'&quot;') : ''}">📋 ${si+1}/${segments.length} 링크</button>
+        </div>
+        <div class="body-box">${escapeHtml(seg.text||'')}</div>
+      `;
+    }).join('');
 
     card.innerHTML = `
       <div class="stage-head">
@@ -617,17 +641,11 @@ function renderResults(destination, parsed, images){
           <div class="num-badge">${i+1}</div>
           <div class="stage-title">${escapeHtml(stage.title || ('단계 ' + (i+1)))}</div>
         </div>
-        <div class="char-count">${(stage.text||'').length.toLocaleString()}자</div>
+        <div class="char-count">${totalChars.toLocaleString()}자 · 사진 ${segments.length}장</div>
       </div>
-      ${img ? `<img class="stage-img" src="${img.url}" alt="${escapeHtml(stage.imageQuery||'')}">` : `<div class="stage-img"></div>`}
-      <div class="img-link-row">
-        <input type="text" readonly value="${img ? img.url : '이미지를 찾지 못했어 (Pexels 키 확인 또는 검색어: ' + escapeHtml(stage.imageQuery||'') + ')'}">
-        <button class="copy-btn" data-copy="${img ? img.url.replace(/"/g,'&quot;') : ''}">📋 링크</button>
-      </div>
-      <div class="section-label">본문</div>
-      <div class="body-box">${escapeHtml(stage.text||'')}</div>
+      ${segmentsHtml}
       <div class="copy-row">
-        <button class="copy-btn" data-copy-text="${i}">📋 텍스트 복사</button>
+        <button class="copy-btn" data-copy-text="${i}">📋 이 단계 텍스트 전체 복사</button>
       </div>
     `;
     results.appendChild(card);
@@ -639,7 +657,7 @@ function renderResults(destination, parsed, images){
       });
     });
     const textBtn = card.querySelector('[data-copy-text]');
-    const fullText = (stage.title ? stage.title + '\n\n' : '') + (stage.text || '');
+    const fullText = (stage.title ? stage.title + '\n\n' : '') + segments.map(s=>s.text||'').join('\n\n');
     textBtn.addEventListener('click', ()=> copyText(fullText, textBtn));
   });
 
@@ -689,11 +707,16 @@ function buildDownloadText(destination, parsed, images){
   }
 
   parsed.stages.forEach((stage, i)=>{
-    const img = images[i];
+    const segImages = images[i] || [];
+    const segments = stage.segments || [];
     lines.push(`■ ${i+1}단계 :: ${stage.title || ''}`);
-    lines.push(`- 이미지 링크 : ${img ? img.url : '(이미지를 찾지 못함)'}`);
-    lines.push(`- ${(stage.text || '').trim()}`);
     lines.push('');
+    segments.forEach((seg, si)=>{
+      const img = segImages[si];
+      lines.push(`- 이미지 링크(${si+1}/${segments.length}) : ${img ? img.url : '(이미지를 찾지 못함)'}`);
+      lines.push(`- ${(seg.text || '').trim()}`);
+      lines.push('');
+    });
   });
 
   if(parsed.hashtags && parsed.hashtags.length){
@@ -731,15 +754,18 @@ generateBtn.addEventListener('click', async ()=>{
     const parsed = await callGemini(geminiKey, destination);
     if(!parsed.stages || parsed.stages.length === 0) throw new Error('생성된 단계가 없어. 다시 시도해줘.');
 
-    setStatus('Pexels에서 사진 검색 중...', false, true);
-    const images = [];
-    for(const stage of parsed.stages){
-      const img = await fetchPexelsImage(pexelsKey, stage.imageQuery || destination);
-      images.push(img);
-    }
+    const totalSegments = parsed.stages.reduce((sum, s)=> sum + (s.segments ? s.segments.length : 0), 0);
+    setStatus(`Pexels에서 사진 ${totalSegments}장 검색 중...`, false, true);
+    const images = await Promise.all(
+      parsed.stages.map(stage =>
+        Promise.all(
+          (stage.segments || []).map(seg => fetchPexelsImage(pexelsKey, seg.imageQuery || destination))
+        )
+      )
+    );
 
     renderResults(destination, parsed, images);
-    setStatus(`✓ "${destination}" 완료 — ${parsed.stages.length}단계 · ${parsed.hashtags.length}개 태그`);
+    setStatus(`✓ "${destination}" 완료 — ${parsed.stages.length}단계 · 사진 ${totalSegments}장 · ${parsed.hashtags.length}개 태그`);
   }catch(err){
     console.error(err);
     setStatus('✕ ' + err.message, true);
